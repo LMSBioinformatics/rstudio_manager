@@ -205,7 +205,7 @@ class Job:
             attempt = 1
             while self.is_pending:
                 sleep_time = min(backoff * (2 ** attempt), backoff_max)
-                logger.info(f'Trying again in {sleep_time}s')
+                logger.info(f'... Trying again in {sleep_time}s')
                 sleep(sleep_time)
                 attempt += 1
 
