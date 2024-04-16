@@ -37,6 +37,7 @@ module load singularityce
 if [[ -n "${CONDA_ENV}" ]]; then
     module load miniconda3
     export RSTUDIO_WHICH_R=$(conda run -n "${CONDA_ENV}" which R)
+    export SINGULARITYENV_PREPEND_LD_LIBRARY_PATH="/home/${USER}/.conda/envs/${CONDA_ENV}/lib/"
 fi
 
 # Setup the execution environment
