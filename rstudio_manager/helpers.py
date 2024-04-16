@@ -302,7 +302,8 @@ def get_logger(name: str, quiet: bool=False) -> logging.Logger:
 
     logger = logging.getLogger(name)
     logger.setLevel(logging.WARN if quiet else logging.INFO)
-    logger.addHandler(ShutdownHandler())
+    if not logger.hasHandlers():
+        logger.addHandler(ShutdownHandler())
     return logger
 
 
