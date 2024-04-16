@@ -55,7 +55,7 @@ def rstudio_start(args: Namespace) -> None:
                     '--export', ','.join((f'{k}={v}' for k, v in exports.items())),
                     str(Path(__file__).resolve().parent / "job_template.sh")
                 ).strip()
-            session = Session(job_id)
+            session = Session(job_id, args.quiet)
             session.write()
         except sh.ErrorReturnCode:
             print(job_id)

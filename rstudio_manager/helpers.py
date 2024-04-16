@@ -81,7 +81,7 @@ class SignalHandler(ContextDecorator):
 
     def _handle_interrupt(self, sig, frame) -> None:
         logger = get_logger('rstudio_signal_handler')
-        logger.warn('\nKill signal received, running shutdown functions')
+        logger.warn('Kill signal received, running shutdown functions')
         self._shutdown_function()
         sys.exit()
 
@@ -140,8 +140,9 @@ class Request:
 class Job:
     ''' Cluster job class object '''
 
-    def __init__(self, job_id: str) -> None:
+    def __init__(self, job_id: str, quiet: bool=False) -> None:
         self.job_id = job_id
+        self._quiet = quiet
         self.query()
 
     def query(self) -> None:
@@ -151,7 +152,7 @@ class Job:
         Parameters:
             job_id (str): the SLURM job id
         '''
-        logger = get_logger('rstudio_job')
+        logger = get_logger('rstudio_job', self._quiet)
         with SignalHandler(cancel_job, self.job_id):
             try:
                 run_sacct = partial(
@@ -199,7 +200,7 @@ class Job:
         Parameters:
             job_id (str): the SLURM job id
         '''
-        logger = get_logger('rstudio_job')
+        logger = get_logger('rstudio_job', self._quiet)
         with SignalHandler(cancel_job, self.job_id):
             attempt = 1
             while self.is_pending:
@@ -288,7 +289,7 @@ class Session(Job):
 # functions ###################################################################
 
 
-def get_logger(name: str, quiet: bool=True) -> logging.Logger:
+def get_logger(name: str, quiet: bool=False) -> logging.Logger:
     '''
     Return a new logger with the specified name
 
