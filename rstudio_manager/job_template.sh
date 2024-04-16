@@ -33,14 +33,17 @@ echo "${IP}:${PORT}"
 # Load required modules from Lmod
 module load singularityce
 
-# If required, switch RSTUDIO_WHICH_R to point to a conda env
+# Setup the execution environment
 if [[ -n "${CONDA_ENV}" ]]; then
+    # If required, point RStudio at a conda env
     module load miniconda3
     export RSTUDIO_WHICH_R=$(conda run -n "${CONDA_ENV}" which R)
     export SINGULARITYENV_LD_LIBRARY_PATH="/home/${USER}/.conda/envs/${CONDA_ENV}/lib"
 fi
+export OMP_NUM_THREADS=${SLURM_CPUS_ON_NODE}  # prevent OpenMP over-allocation
+export SINGULARITYENV_RSTUDIO_SESSION_TIMEOUT=0  # don't suspend idle sessions
 
-# Setup the execution environment
+# Setup the singularity environment
 SESSION_TMP="${TMPDIR}/rstudio_${SLURM_JOB_ID}"
 mkdir -p ${SESSION_TMP}/{tmp,run,lib}
 BINDS="${SESSION_TMP}/tmp:/tmp,${SESSION_TMP}/run:/run,${SESSION_TMP}/lib:/var/lib/rstudio-server"
