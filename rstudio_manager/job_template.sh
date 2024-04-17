@@ -12,6 +12,10 @@
 
 BASH_PID=$$
 
+################################################################################
+# Functions
+################################################################################
+
 #
 # Trap function to handle job teardown
 #
@@ -28,11 +32,25 @@ cleanup() {
 }
 
 #
+# Function to retrieve an unused port from the OS, restricted to a given range
+#
+
+freeport() {
+    comm -23 \
+        <(seq 44000 44099) \
+        <(ss -Htan | awk '{gsub(/.*:/, "", $4); print $4}' | sort -u) \
+    | shuf \
+    | head -1
+}
+
+################################################################################
+
+#
 # Acquire an available port from the OS
 #
 
 IP=$(hostname -i)
-PORT=$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')
+PORT=$(freeport)
 echo "${IP}:${PORT}"
 
 #
