@@ -12,9 +12,11 @@
 
 BASH_PID=$$
 
-cleanup() {
-    # Trap function to handle job teardown
+#
+# Trap function to handle job teardown
+#
 
+cleanup() {
     # Search for this bash process' `rserver` child and kill it
     RSERVER_PID=$(ps -C rserver -o ppid,pid --no-headers | awk "\$1==$BASH_PID {print \$2}")
     if [[ -n "${RSERVER_PID}" ]]; then
@@ -25,40 +27,57 @@ cleanup() {
     rm -rf ${SESSION_TMP}
 }
 
-# Get the node's IP and an open PORT (assigned by the OS)
+#
+# Acquire an available port from the OS
+#
+
 IP=$(hostname -i)
 PORT=$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')
 echo "${IP}:${PORT}"
 
+#
 # Load required modules from Lmod
+#
+
 module load singularityce
 
+#
 # Setup the execution environment
+#
+
+# Create temporary working area within scratch
+SESSION_TMP="${TMPDIR}/rstudio_${SLURM_JOB_ID}"
+mkdir -p ${SESSION_TMP}/{tmp/rstudio-server,run,lib}
+
+# If required, point RStudio at a conda env
 if [[ -n "${CONDA_ENV}" ]]; then
-    # If required, point RStudio at a conda env
     module load miniconda3
     export RSTUDIO_WHICH_R=$(conda run -n "${CONDA_ENV}" which R)
     export SINGULARITYENV_LD_LIBRARY_PATH="/home/${USER}/.conda/envs/${CONDA_ENV}/lib"
 fi
-export OMP_NUM_THREADS=${SLURM_CPUS_ON_NODE}  # prevent OpenMP over-allocation
-export SINGULARITYENV_RSTUDIO_SESSION_TIMEOUT=0  # don't suspend idle sessions
 
-# Setup the singularity environment
-SESSION_TMP="${TMPDIR}/rstudio_${SLURM_JOB_ID}"
-mkdir -p ${SESSION_TMP}/{tmp,run,lib}
-BINDS="${SESSION_TMP}/tmp:/tmp,${SESSION_TMP}/run:/run,${SESSION_TMP}/lib:/var/lib/rstudio-server"
-BINDS="${BINDS}"$([[ -n "${BIND_PATHS}" ]] && echo ",${BIND_PATHS}")
+# Prevent OpenMP over-allocation
+export OMP_NUM_THREADS=${SLURM_CPUS_ON_NODE}
+# Don't suspend idle sessions
+export SINGULARITYENV_RSTUDIO_SESSION_TIMEOUT=0
+
+#
+# Launch RStudio
+#
 
 # Wrapped with the exit trap ...
 trap cleanup EXIT
 # ... start the containerised RStudio Server
 singularity exec \
-    --bind "${BINDS}" \
+    --bind "${SESSION_TMP}/tmp:/tmp" \
+    --bind "${SESSION_TMP}/run:/run" \
+    --bind "${SESSION_TMP}/lib:/var/lib/rstudio-server" \
+    $([[ -n "${BIND_PATHS}" ]] && echo "--bind ${BIND_PATHS}") \
     $([[ $(hostname) == gpu* ]] && echo "--nv") \
     "${RSTUDIO_SIF}" \
     rserver \
     --server-user ${USER} \
-    --auth-none=0  \
-    --auth-pam-helper-path=pam-helper \
+    --auth-none 0  \
+    --auth-pam-helper-path pam-helper \
     --www-port ${PORT} \
     --server-data-dir /tmp
