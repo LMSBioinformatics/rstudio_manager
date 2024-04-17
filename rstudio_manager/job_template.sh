@@ -61,6 +61,7 @@ export OMP_NUM_THREADS=${SLURM_CPUS_ON_NODE}
 # Don't suspend idle sessions
 export SINGULARITYENV_RSTUDIO_SESSION_TIMEOUT=0
 
+
 #
 # Launch RStudio
 #
@@ -72,6 +73,7 @@ singularity exec \
     --bind "${SESSION_TMP}/tmp:/tmp" \
     --bind "${SESSION_TMP}/run:/run" \
     --bind "${SESSION_TMP}/lib:/var/lib/rstudio-server" \
+    --bind "/opt" \
     $([[ -n "${BIND_PATHS}" ]] && echo "--bind ${BIND_PATHS}") \
     $([[ $(hostname) == gpu* ]] && echo "--nv") \
     "${RSTUDIO_SIF}" \
@@ -80,4 +82,5 @@ singularity exec \
     --auth-none 0  \
     --auth-pam-helper-path pam-helper \
     --www-port ${PORT} \
-    --server-data-dir /tmp
+    --server-data-dir /tmp \
+    --rsession-memory-limit-mb ${SLURM_MEM_PER_NODE}
