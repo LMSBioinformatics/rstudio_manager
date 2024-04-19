@@ -68,8 +68,8 @@ END
 # Write logging.conf
 cat > ${SESSION_TMP}/etc/rstudio/logging.conf <<END
 [*]
-log-level=debug
-logger-type=stderr
+log-level=warn
+logger-type=syslog
 END
 
 # Write rserver.conf
