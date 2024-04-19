@@ -95,7 +95,10 @@ def rstudio_stop(args: Namespace) -> None:
     '''
 
     for session in get_rstudio_jobs():
-        if (args.job and session.job_id in args.job) or args.all:
+        if args.all or \
+                (args.job and
+                    (session.job_id in args.job) or
+                    (session.job_name in args.job)):
             cancel_job(session.job_id)
 
 
