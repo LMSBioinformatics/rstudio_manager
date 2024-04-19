@@ -115,7 +115,7 @@ commands['delete'] = commands['cancel'] = commands['kill'] = commands['stop']
 # arguments
 commands_stop = commands['stop'].add_mutually_exclusive_group()
 commands_stop.add_argument(
-    'job', type='str', nargs='+',
+    'job', type=str, nargs='+',
     help='list of job number/s and/or name/s to kill')
 commands_stop.add_argument(
     '-a', '--all', action='store_true',
