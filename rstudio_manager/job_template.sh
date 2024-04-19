@@ -16,10 +16,7 @@ BASH_PID=$$
 # Functions
 ################################################################################
 
-#
 # Trap function to handle job teardown
-#
-
 cleanup() {
     # Search for this bash process' `rserver` child and kill it
     RSERVER_PID=$(ps -C rserver -o ppid,pid --no-headers | awk "\$1==$BASH_PID {print \$2}")
@@ -31,10 +28,7 @@ cleanup() {
     rm -rf ${SESSION_TMP}
 }
 
-#
 # Function to retrieve an unused port from the OS, restricted to a given range
-#
-
 freeport() {
     comm -23 \
         <(seq 44000 44099) \
@@ -44,27 +38,18 @@ freeport() {
 }
 
 ################################################################################
+# Setup the execution environment
+################################################################################
 
-#
 # Acquire an available port from the OS
-#
-
 IP=$(hostname -i)
 PORT=$(freeport)
 echo "${IP}:${PORT}"
 
-#
 # Load required modules from Lmod
-#
-
 module load singularityce
 module load miniconda3
-
 conda activate ${CONDA_ENV}
-
-#
-# Setup the execution environment
-#
 
 # Create temporary working area within scratch
 SESSION_TMP="${TMPDIR}/rstudio_${SLURM_JOB_ID}"
@@ -111,9 +96,9 @@ END
 # Prevent OpenMP over-allocation
 export OMP_NUM_THREADS=${SLURM_CPUS_ON_NODE}
 
-#
+################################################################################
 # Launch RStudio
-#
+################################################################################
 
 # Wrapped with the exit trap ...
 trap cleanup EXIT

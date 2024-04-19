@@ -19,8 +19,7 @@ import sys
 from rich import print
 from rich_argparse import RawDescriptionRichHelpFormatter
 
-from rstudio_manager import \
-    __prog__, __version__, __status__, SESSION_STORE, R_VERSIONS
+from rstudio_manager import __prog__, __version__, __status__, SESSION_STORE
 from rstudio_manager.commands import rstudio_start, rstudio_stop, rstudio_list
 
 
@@ -70,11 +69,8 @@ commands['start'] = subparsers.add_parser(
 commands['create'] = commands['new'] = commands['start']
 # arguments
 commands['start'].add_argument(
-        'r_version', type=str, choices=R_VERSIONS,
-        help='version of R used for the session (required)')
-commands['start'].add_argument(
-        '-c', '--conda', type=str, default='',
-        help='link RStudio to an existing conda environment')
+        'conda', type=str,
+        help='name of an existing conda environment containing R')
 commands['start'].add_argument(
         '-n', '--name', default='rstudio_server', type=str,
         help='job name for the scheduler (default "%(default)s")')
@@ -146,9 +142,6 @@ commands['ls'] = commands['list']
 
 
 def main():
-
-    # ensure the SESSION_STORE exists
-    SESSION_STORE.mkdir(exist_ok=True)
 
     # catch program name by itself
     if len(sys.argv) == 1:

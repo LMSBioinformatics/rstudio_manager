@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.table import Table
 import sh
 
-from rstudio_manager import SIF_STORE, SESSION_STORE
+from rstudio_manager import SINGULARITY_IMAGE, SESSION_STORE
 from rstudio_manager.helpers import \
     get_logger, get_rstudio_jobs, cancel_job, Request, Session, SignalHandler
 
@@ -45,7 +45,7 @@ def rstudio_start(args: Namespace) -> None:
             logger.info('Submitting the job')
             exports = {
                 'PASSWORD': args.token,
-                'RSTUDIO_SIF': str(SIF_STORE / f'rstudio_{args.r_version}.sif'),
+                'RSTUDIO_SIF': str(SINGULARITY_IMAGE),
                 'BIND_PATHS': f'"{args.bind}"',
                 "CONDA_ENV": f'{args.conda}'
             }
