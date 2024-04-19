@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 __prog__ = 'rstudio_manager'
-__version__ = '1.0'
+__version__ = '1.1'
 __author__ = 'George Young'
 __maintainer__ = 'George Young'
 __email__ = 'bioinformatics@lms.mrc.ac.uk'
