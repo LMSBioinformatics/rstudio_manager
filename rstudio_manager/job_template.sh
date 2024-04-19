@@ -7,7 +7,7 @@
 #     RSTUDIO_SIF: singularity .sif image location
 #     PASSWORD: password token for the RStudio server
 #     BIND_PATHS: (can be blank) additional bind paths for singularity
-#     CONDA_ENV: (can be blank) conda env supplying R
+#     CONDA_ENV: conda env supplying R
 ################################################################################
 
 BASH_PID=$$
@@ -27,7 +27,7 @@ cleanup() {
         kill ${RSERVER_PID}
     fi
     # Clean up temporary directories
-    sleep 2
+    sleep 5
     rm -rf ${SESSION_TMP}
 }
 
@@ -58,6 +58,9 @@ echo "${IP}:${PORT}"
 #
 
 module load singularityce
+module load miniconda3
+
+conda activate ${CONDA_ENV}
 
 #
 # Setup the execution environment
@@ -65,20 +68,48 @@ module load singularityce
 
 # Create temporary working area within scratch
 SESSION_TMP="${TMPDIR}/rstudio_${SLURM_JOB_ID}"
-mkdir -p ${SESSION_TMP}/{tmp/rstudio-server,run,lib}
+mkdir -p ${SESSION_TMP}/{etc/rstudio,tmp,run,var/lib/rstudio-server}
 
-# If required, point RStudio at a conda env
-if [[ -n "${CONDA_ENV}" ]]; then
-    module load miniconda3
-    export RSTUDIO_WHICH_R=$(conda run -n "${CONDA_ENV}" which R)
-    export SINGULARITYENV_LD_LIBRARY_PATH="/home/${USER}/.conda/envs/${CONDA_ENV}/lib"
-fi
+# Create session cookie token
+uuidgen -x | tr -d '-' > "${SESSION_TMP}/etc/rstudio/secure-cookie-key"
+chmod 600 "${SESSION_TMP}/etc/rstudio/secure-cookie-key"
+
+# Write database.conf
+cat > ${SESSION_TMP}/etc/rstudio/database.conf <<END
+provider=sqlite
+directory=/var/lib/rstudio-server
+END
+
+# Write logging.conf
+cat > ${SESSION_TMP}/etc/rstudio/logging.conf <<END
+[*]
+log-level=debug
+logger-type=stderr
+END
+
+# Write rserver.conf
+cat > ${SESSION_TMP}/etc/rstudio/rserver.conf <<END
+www-port=${PORT}
+rsession-which-r=$(which R)
+rsession-ld-library-path=$CONDA_PREFIX/lib
+auth-none=0
+auth-pam-helper-path=pam-helper
+auth-timeout-minutes=0
+server-data-dir=/tmp
+server-user=${USER}
+secure-cookie-key-file=/etc/rstudio/secure-cookie-key
+END
+
+# Write rsession.conf
+cat > ${SESSION_TMP}/etc/rstudio/rsession.conf <<END
+session-timeout-minutes=0
+session-quit-child-processes-on-exit=1
+session-default-working-dir=${SLURM_SUBMIT_DIR}
+session-default-new-project-dir=/home/${USER}
+END
 
 # Prevent OpenMP over-allocation
 export OMP_NUM_THREADS=${SLURM_CPUS_ON_NODE}
-# Don't suspend idle sessions
-export SINGULARITYENV_RSTUDIO_SESSION_TIMEOUT=0
-
 
 #
 # Launch RStudio
@@ -88,17 +119,16 @@ export SINGULARITYENV_RSTUDIO_SESSION_TIMEOUT=0
 trap cleanup EXIT
 # ... start the containerised RStudio Server
 singularity exec \
+    --bind "${SESSION_TMP}/etc/rstudio/secure-cookie-key:/etc/rstudio/secure-cookie-key" \
+    --bind "${SESSION_TMP}/etc/rstudio/database.conf:/etc/rstudio/database.conf" \
+    --bind "${SESSION_TMP}/etc/rstudio/logging.conf:/etc/rstudio/logging.conf" \
+    --bind "${SESSION_TMP}/etc/rstudio/rserver.conf:/etc/rstudio/rserver.conf" \
+    --bind "${SESSION_TMP}/etc/rstudio/rsession.conf:/etc/rstudio/rsession.conf" \
     --bind "${SESSION_TMP}/tmp:/tmp" \
     --bind "${SESSION_TMP}/run:/run" \
-    --bind "${SESSION_TMP}/lib:/var/lib/rstudio-server" \
+    --bind "${SESSION_TMP}/var/lib/rstudio-server:/var/lib/rstudio-server" \
     --bind "/opt" \
     $([[ -n "${BIND_PATHS}" ]] && echo "--bind ${BIND_PATHS}") \
     $([[ $(hostname) == gpu* ]] && echo "--nv") \
     "${RSTUDIO_SIF}" \
-    rserver \
-    --server-user ${USER} \
-    --auth-none 0  \
-    --auth-pam-helper-path pam-helper \
-    --www-port ${PORT} \
-    --server-data-dir /tmp \
-    --rsession-memory-limit-mb ${SLURM_MEM_PER_NODE}
+    rserver
