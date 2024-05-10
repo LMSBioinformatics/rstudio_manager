@@ -60,20 +60,20 @@ uuidgen -x | tr -d '-' > "${SESSION_TMP}/etc/rstudio/secure-cookie-key"
 chmod 600 "${SESSION_TMP}/etc/rstudio/secure-cookie-key"
 
 # Write database.conf
-cat > ${SESSION_TMP}/etc/rstudio/database.conf <<END
+cat > ${SESSION_TMP}/etc/rstudio/database.conf <<EOF
 provider=sqlite
 directory=/var/lib/rstudio-server
-END
+EOF
 
 # Write logging.conf
-cat > ${SESSION_TMP}/etc/rstudio/logging.conf <<END
+cat > ${SESSION_TMP}/etc/rstudio/logging.conf <<EOF
 [*]
 log-level=warn
 logger-type=syslog
-END
+EOF
 
 # Write rserver.conf
-cat > ${SESSION_TMP}/etc/rstudio/rserver.conf <<END
+cat > ${SESSION_TMP}/etc/rstudio/rserver.conf <<EOF
 www-port=${PORT}
 rsession-which-r=$(which R)
 rsession-ld-library-path=$CONDA_PREFIX/lib
@@ -83,15 +83,15 @@ auth-timeout-minutes=0
 server-data-dir=/tmp
 server-user=${USER}
 secure-cookie-key-file=/etc/rstudio/secure-cookie-key
-END
+EOF
 
 # Write rsession.conf
-cat > ${SESSION_TMP}/etc/rstudio/rsession.conf <<END
+cat > ${SESSION_TMP}/etc/rstudio/rsession.conf <<EOF
 session-timeout-minutes=0
 session-quit-child-processes-on-exit=1
 session-default-working-dir=${SLURM_SUBMIT_DIR}
 session-default-new-project-dir=/home/${USER}
-END
+EOF
 
 # Prevent OpenMP over-allocation
 export OMP_NUM_THREADS=${SLURM_CPUS_ON_NODE}
