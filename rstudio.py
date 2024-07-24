@@ -19,7 +19,8 @@ import sys
 from rich import print
 from rich_argparse import RawDescriptionRichHelpFormatter
 
-from rstudio_manager import __prog__, __version__, __status__, SESSION_STORE
+from rstudio_manager import \
+    __prog__, __version__, __status__, SESSION_STORE, R_VERSIONS
 from rstudio_manager.commands import rstudio_start, rstudio_stop, rstudio_list
 
 
@@ -69,8 +70,8 @@ commands['start'] = subparsers.add_parser(
 commands['create'] = commands['new'] = commands['start']
 # arguments
 commands['start'].add_argument(
-    'conda', type=str,
-    help='name of an existing conda environment containing R')
+    'r_version', choices=R_VERSIONS,
+    help='version of R to launch')
 commands['start'].add_argument(
     '-n', '--name', default='rstudio_server', type=str,
     help='job name for the scheduler (default "%(default)s")')

@@ -7,7 +7,6 @@
 #     RSTUDIO_SIF: singularity .sif image location
 #     PASSWORD: password token for the RStudio server
 #     BIND_PATHS: (can be blank) additional bind paths for singularity
-#     CONDA_ENV: conda env supplying R
 ################################################################################
 
 BASH_PID=$$
@@ -41,15 +40,12 @@ freeport() {
 # Setup the execution environment
 ################################################################################
 
+module load singularityce
+
 # Acquire an available port from the OS
 IP=$(hostname -i)
 PORT=$(freeport)
 echo "${IP}:${PORT}"
-
-# Load required modules from Lmod
-module load singularityce
-module load miniconda3
-conda activate ${CONDA_ENV}
 
 # Create temporary working area within scratch
 SESSION_TMP="${TMPDIR}/rstudio_${SLURM_JOB_ID}"
@@ -75,8 +71,6 @@ EOF
 # Write rserver.conf
 cat > ${SESSION_TMP}/etc/rstudio/rserver.conf <<EOF
 www-port=${PORT}
-rsession-which-r=$(which R)
-rsession-ld-library-path=$CONDA_PREFIX/lib
 auth-none=0
 auth-pam-helper-path=pam-helper
 auth-timeout-minutes=0

@@ -1,4 +1,5 @@
 from pathlib import Path
+from string import Template
 
 
 __prog__ = 'rstudio_manager'
@@ -12,4 +13,8 @@ __license__ = 'MIT'
 SESSION_STORE = Path.home() / '.rstudio_manager'
 SESSION_STORE.mkdir(exist_ok=True)
 
-SINGULARITY_IMAGE = Path('/opt/resources/apps/rstudio/rstudio_4.2.3.sif')
+SINGULARITY_IMAGE = Template('/opt/resources/apps/rstudio/lmsbio/rstudio_$vers.sif')
+
+R_VERSIONS = (
+    '4.4.0',
+)

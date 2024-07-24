@@ -45,9 +45,8 @@ def rstudio_start(args: Namespace) -> None:
             logger.info('Submitting the job')
             exports = {
                 'PASSWORD': args.token,
-                'RSTUDIO_SIF': str(SINGULARITY_IMAGE),
-                'BIND_PATHS': f'"{args.bind}"',
-                "CONDA_ENV": f'{args.conda}'
+                'RSTUDIO_SIF': SINGULARITY_IMAGE.substitute(vers=args.r_version),
+                'BIND_PATHS': f'"{args.bind}"'
             }
             job_id = \
                 sbatch(
