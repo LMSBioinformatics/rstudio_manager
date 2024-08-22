@@ -115,18 +115,17 @@ class Request:
     def __post_init__(self) -> None:
         ''' Validate the request against the partition limits '''
         logger = get_logger('rstudio_request')
-        exclude_nodes = tuple(s.node for s in get_rstudio_jobs())
         try:
             assert 1 <= self.cpu <= partitions[self.partition]['cpu']
             assert 1 <= self.mem <= partitions[self.partition]['mem']
             assert 0 <= self.gpu <= partitions[self.partition]['gpu']
             assert 1 <= self.time <= partitions[self.partition]['time']
             self.qos = partitions[self.partition]['qos']
-            self.nodelist = tuple(
+            self.exclude = tuple(s.node for s in get_rstudio_jobs())
+            assert len(tuple(
                 node for node in partitions[self.partition]['nodes']
-                if node not in exclude_nodes
-            )
-            assert len(self.nodelist) > 0
+                if node not in self.exclude
+            )) > 0
         except AssertionError:
             logger.error(
                 f'Invalid request for SLURM partition: {self.partition}')  # exit(1)
@@ -172,7 +171,7 @@ class Job:
                 run_sacct = partial(
                     sacct,
                     '-PXn',
-                    '--format', 'JobName,Partition,QOS,State,Elapsed,Timelimit,NodeList,ReqTRES',
+                    '--format', 'JobName,Partition,State,NodeList',
                     '-j', self.job_id
                 )
                 while not (sacct_line := run_sacct()) or \
@@ -181,20 +180,7 @@ class Job:
             except sh.ErrorReturnCode:
                 logger.error('`sacct` had a non-zero exit status')  # exit(1)
         sacct_line = sacct_line.strip().split('|')
-        for k, v in \
-                zip(
-                    ('job_name', 'partition', 'qos', 'state', 'elapsed', 'time', 'node'),
-                    sacct_line[:-1]
-                ):
-            setattr(self, k, v)
-        tres = \
-            dict(
-                kv.split('=')
-                for kv in sacct_line[-1].split(',')
-                if kv not in ('billing', 'node')
-            )
-        tres['gpu'] = tres.pop('gres/gpu', '0')
-        for k, v in tres.items():
+        for k, v in zip(('job_name', 'partition', 'state', 'node'), sacct_line):
             setattr(self, k, v)
 
     @property
@@ -264,13 +250,8 @@ class Session(Job):
         return {
             self.job_id: {
                 'job_name': self.job_name,
-                'node': self.node,
                 'partition': self.partition,
-                'qos': self.qos,
-                'time': self.time,
-                'cpu': self.cpu,
-                'mem': self.mem,
-                'gpu': self.gpu,
+                'node': self.node,
                 'url': self.url,
                 'token': self.token
             }
