@@ -27,7 +27,7 @@ cleanup() {
     rm -rf ${SESSION_TMP}
 }
 
-# Function to retrieve an unused port from the OS, restricted to a given range
+# Retrieve an unused port from the OS, restricted to a given range
 freeport() {
     comm -23 \
         <(seq 44000 44099) \
