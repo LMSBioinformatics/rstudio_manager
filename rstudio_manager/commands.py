@@ -79,7 +79,7 @@ def rstudio_start(args: Namespace) -> None:
             # wait until we can connect to the session
             while not session.is_alive:
                 sleep(2)
-        logger.info(f'\nRStudio is running')
+        logger.info(f'\nRStudio is running on {session.node}')
         # print so that those using -q see the output
         print(f'URL:   {session.url}')
         print(f'Token: {session.token}')
@@ -117,12 +117,14 @@ def rstudio_list(args: Namespace) -> None:
     table = Table(title="Active RStudio Servers")
     table.add_column("Job ID", justify="right", style="cyan", no_wrap=True)
     table.add_column("Name", justify="left")
+    table.add_column("Node", justify="left", no_wrap=True)
     table.add_column("URL", justify="left", no_wrap=True)
     table.add_column("Token", justify="left", no_wrap=True)
 
     for session in get_rstudio_jobs():
         table.add_row(
-            session.job_id, session.job_name, session.url, session.token
+            session.job_id, session.job_name, session.node,
+            session.url, session.token
         )
 
     console = Console()

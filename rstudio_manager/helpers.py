@@ -34,28 +34,35 @@ partitions = {
         'mem': 125,
         'gpu': 4,
         'time': 16,
-        'qos': 'qos_int'
+        'qos': 'qos_int',
+        'nodes': ('compute001', 'compute002', 'compute003', 'compute004',
+            'compute005', 'compute006', 'hmem001', 'gpu001', 'gpu002',
+            'gpu003', 'gpu004')
     },
     'cpu': {
         'cpu': 16,
         'mem': 250,
         'gpu': 0,
         'time': 72,
-        'qos': 'qos_batch'
+        'qos': 'qos_batch',
+        'nodes': ('compute001', 'compute002', 'compute003', 'compute004',
+            'compute005', 'compute006')
     },
     'gpu': {
         'cpu': 56,
         'mem': 500,
         'gpu': 4,
         'time': 168,
-        'qos': 'qos_batch'
+        'qos': 'qos_batch',
+        'nodes': ('gpu001', 'gpu002', 'gpu003', 'gpu004')
     },
     'hmem': {
         'cpu': 64,
         'mem': 4000,
         'gpu': 0,
         'time': 168,
-        'qos': 'qos_batch'
+        'qos': 'qos_batch',
+        'nodes': ('hmem001', )
     }
 }
 
@@ -108,12 +115,18 @@ class Request:
     def __post_init__(self) -> None:
         ''' Validate the request against the partition limits '''
         logger = get_logger('rstudio_request')
+        exclude_nodes = tuple(s.node for s in get_rstudio_jobs())
         try:
             assert 1 <= self.cpu <= partitions[self.partition]['cpu']
             assert 1 <= self.mem <= partitions[self.partition]['mem']
             assert 0 <= self.gpu <= partitions[self.partition]['gpu']
             assert 1 <= self.time <= partitions[self.partition]['time']
             self.qos = partitions[self.partition]['qos']
+            self.nodelist = tuple(
+                node for node in partitions[self.partition]['nodes']
+                if node not in exclude_nodes
+            )
+            assert length(self.nodelist) > 0
         except AssertionError:
             logger.error(
                 f'Invalid request for SLURM partition: {self.partition}')  # exit(1)
@@ -128,6 +141,7 @@ class Request:
             '--output', tmpfile.name,
             '--partition', self.partition,
             '--qos', self.qos,
+            '--nodelist', f'{",".join(self.nodelist)}',
             '--ntasks', '1',
             '--cpus-per-task', f'{self.cpu}',
             '--mem', f'{self.mem}G',
@@ -158,7 +172,7 @@ class Job:
                 run_sacct = partial(
                     sacct,
                     '-PXn',
-                    '--format', 'JobName,Partition,QOS,State,Elapsed,Timelimit,ReqTRES',
+                    '--format', 'JobName,Partition,QOS,State,Elapsed,Timelimit,NodeList,ReqTRES',
                     '-j', self.job_id
                 )
                 while not (sacct_line := run_sacct()) or \
@@ -169,7 +183,7 @@ class Job:
         sacct_line = sacct_line.strip().split('|')
         for k, v in \
                 zip(
-                    ('job_name', 'partition', 'qos', 'state', 'elapsed', 'time'),
+                    ('job_name', 'partition', 'qos', 'state', 'elapsed', 'time', 'node'),
                     sacct_line[:-1]
                 ):
             setattr(self, k, v)
@@ -250,6 +264,7 @@ class Session(Job):
         return {
             self.job_id: {
                 'job_name': self.job_name,
+                'node': self.node,
                 'partition': self.partition,
                 'qos': self.qos,
                 'time': self.time,
