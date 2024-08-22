@@ -146,7 +146,7 @@ class Request:
             '--time', f'{self.time}:00:00',
             '--gpus', f'{self.gpu}',
             '--parsable'
-        ] + ['--exclude', f'{",".join(self.exclude)}'] if self.exclude else []
+        ] + (['--exclude', f'{",".join(self.exclude)}'] if self.exclude else [])
 
 
 class Job:
