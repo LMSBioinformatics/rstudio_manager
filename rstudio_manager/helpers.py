@@ -126,7 +126,7 @@ class Request:
                 node for node in partitions[self.partition]['nodes']
                 if node not in exclude_nodes
             )
-            assert length(self.nodelist) > 0
+            assert len(self.nodelist) > 0
         except AssertionError:
             logger.error(
                 f'Invalid request for SLURM partition: {self.partition}')  # exit(1)
