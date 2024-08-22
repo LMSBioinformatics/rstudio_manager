@@ -140,14 +140,13 @@ class Request:
             '--output', tmpfile.name,
             '--partition', self.partition,
             '--qos', self.qos,
-            '--nodelist', f'{",".join(self.nodelist)}',
             '--ntasks', '1',
             '--cpus-per-task', f'{self.cpu}',
             '--mem', f'{self.mem}G',
             '--time', f'{self.time}:00:00',
             '--gpus', f'{self.gpu}',
             '--parsable'
-        ]
+        ] + ['--exclude', f'{",".join(self.exclude)}'] if self.exclude else []
 
 
 class Job:
