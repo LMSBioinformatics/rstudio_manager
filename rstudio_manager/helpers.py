@@ -142,9 +142,10 @@ class Request:
             '--qos', self.qos,
             '--ntasks', '1',
             '--cpus-per-task', f'{self.cpu}',
+            '--gpus', f'{self.gpu}',
             '--mem', f'{self.mem}G',
             '--time', f'{self.time}:00:00',
-            '--gpus', f'{self.gpu}',
+            '--signal', 'B:SIGTERM@60',
             '--parsable'
         ] + (['--exclude', f'{",".join(self.exclude)}'] if self.exclude else [])
 
@@ -321,6 +322,6 @@ def cancel_job(job_id: str) -> None:
     logger = get_logger('rstudio_stop')
     logger.warn(f'Cancelling job {job_id}')
     try:
-        scancel(job_id)
+        scancel(job_id, b=True, s='TERM')
     except sh.ErrorReturnCode:
         logger.error('`scancel` had a non-zero exit status')  # exit(1)

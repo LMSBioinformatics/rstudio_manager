@@ -15,16 +15,21 @@ BASH_PID=$$
 # Functions
 ################################################################################
 
-# Trap function to handle job teardown
-cleanup() {
+# Trap function to end the RStudio process from scancel/timeout
+cancel() {
     # Search for this bash process' `rserver` child and kill it
     RSERVER_PID=$(ps -C rserver -o ppid,pid --no-headers | awk "\$1==$BASH_PID {print \$2}")
     if [[ -n "${RSERVER_PID}" ]]; then
-        kill ${RSERVER_PID}
+        kill -SIGTERM ${RSERVER_PID}
     fi
+    sleep 10
+}
+
+# Trap function to handle job teardown
+cleanup() {
     # Clean up temporary directories
-    sleep 5
     rm -rf ${SESSION_TMP}
+    exit 0
 }
 
 # Retrieve an unused port from the OS, restricted to a given range
@@ -94,7 +99,8 @@ export OMP_NUM_THREADS=${SLURM_CPUS_ON_NODE}
 # Launch RStudio
 ################################################################################
 
-# Wrapped with the exit trap ...
+# Wrapped with the signal and exit traps ...
+trap cancel SIGTERM
 trap cleanup EXIT
 # ... start the containerised RStudio Server
 singularity exec \
