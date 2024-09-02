@@ -15,10 +15,9 @@ BASH_PID=$$
 # Functions
 ################################################################################
 
-# Trap function to end the RStudio process from scancel/timeout
+# Trap function to end the process from scancel/timeout
 cancel() {
-    # Search for this bash process' `rserver` child and kill it
-    RSERVER_PID=$(ps -C rserver -o ppid,pid --no-headers | awk "\$1==$BASH_PID {print \$2}")
+    # Pass SIGTERM to allow graceful shutdown
     if [[ -n "${RSERVER_PID}" ]]; then
         kill -SIGTERM ${RSERVER_PID}
     fi
@@ -116,4 +115,6 @@ singularity exec \
     $([[ -n "${BIND_PATHS}" ]] && echo "--bind ${BIND_PATHS}") \
     $([[ $(hostname) == gpu* ]] && echo "--nv") \
     "${RSTUDIO_SIF}" \
-    rserver
+    rserver &
+RSERVER_PID=$!
+wait ${RSERVER_PID}
