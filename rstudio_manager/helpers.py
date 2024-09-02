@@ -320,7 +320,7 @@ def cancel_job(job_id: str) -> None:
         job_id (str): the SLURM job id
     '''
     logger = get_logger('rstudio_stop')
-    logger.warn(f'Cancelling job {job_id}')
+    logger.warn(f'Terminating job {job_id} and cleaning up')
     try:
         scancel(job_id, b=True, s='TERM')
     except sh.ErrorReturnCode:

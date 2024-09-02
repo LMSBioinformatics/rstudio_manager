@@ -27,8 +27,8 @@ cancel() {
 # Trap function to handle job teardown
 cleanup() {
     # Clean up temporary directories
-    rm -rf ${SESSION_TMP}
-    exit 0
+    rm -rf ${SESSION_TMP} \
+    && exit 0
 }
 
 # Retrieve an unused port from the OS, restricted to a given range
