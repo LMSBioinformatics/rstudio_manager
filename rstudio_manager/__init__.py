@@ -17,4 +17,5 @@ SINGULARITY_IMAGE = Template('/opt/resources/apps/rstudio/lmsbio/rstudio_$vers.s
 
 R_VERSIONS = (
     '4.4.0',
+    '4.4.1'
 )
