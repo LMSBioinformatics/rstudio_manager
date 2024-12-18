@@ -17,4 +17,7 @@ SINGULARITY_STORE = Path('/opt/software/apps/singularity/rstudio')
 SINGULARITY_IMAGE = Template(str(SINGULARITY_STORE / 'rstudio_$vers.sif'))
 
 R_VERSIONS = \
-    sorted(sif.stem.removeprefix('rstudio_') for sif in p.glob('*.sif'))
+    sorted(
+        sif.stem.removeprefix('rstudio_')
+        for sif in SINGULARITY_STOREp.glob('*.sif')
+    )
