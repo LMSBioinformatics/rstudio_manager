@@ -8,8 +8,6 @@
 #     BIND_PATHS: (can be blank) additional bind paths for singularity
 ################################################################################
 
-BASH_PID=$$
-
 ################################################################################
 # Functions
 ################################################################################
@@ -110,10 +108,11 @@ singularity exec \
     --bind "${SESSION_TMP}/tmp:/tmp" \
     --bind "${SESSION_TMP}/run:/run" \
     --bind "${SESSION_TMP}/var/lib/rstudio-server:/var/lib/rstudio-server" \
-    --bind "/opt" \
+    --bind "/opt/resources" \
     $([[ -n "${BIND_PATHS}" ]] && echo "--bind ${BIND_PATHS}") \
     $([[ $(hostname) == gpu* ]] && echo "--nv") \
     "${RSTUDIO_SIF}" \
     rserver &
+
 RSERVER_PID=$!
 wait ${RSERVER_PID}

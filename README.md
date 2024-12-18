@@ -24,4 +24,4 @@ Three subcommands are exposed to the user:
   Runs `scancel` for a running session or for all active sessions
 
 - `rstudio list`
-  Lists the user's active sessions, their URLs, and password tokens
+  Lists the user's active sessions and their URLs
