@@ -31,8 +31,8 @@ scancel = sh.Command('/opt/slurm/22.05.8/bin/scancel')
 partitions = {
     'int': {
         'cpu': 8,
-        'mem': 125,
-        'gpu': 4,
+        'mem': 250,
+        'gpu': 2,
         'time': 16,
         'qos': 'qos_int',
         'nodes': ('compute001', 'compute002', 'compute003', 'compute004',
@@ -46,7 +46,7 @@ partitions = {
         'time': 72,
         'qos': 'qos_batch',
         'nodes': ('compute001', 'compute002', 'compute003', 'compute004',
-            'compute005', 'compute006')
+            'compute005', 'compute006', 'hmem001')
     },
     'gpu': {
         'cpu': 56,
@@ -121,17 +121,9 @@ class Request:
             assert 0 <= self.gpu <= partitions[self.partition]['gpu']
             assert 1 <= self.time <= partitions[self.partition]['time']
             self.qos = partitions[self.partition]['qos']
-            self.exclude = tuple(s.node for s in get_rstudio_jobs())
-            assert len(tuple(
-                node for node in partitions[self.partition]['nodes']
-                if node not in self.exclude
-            )) > 0
         except AssertionError:
             logger.error(
                 f'Invalid request for SLURM partition: {self.partition}')  # exit(1)
-        except KeyError:
-            logger.error(
-                f'Unknown SLURM partition for rstudio: {self.partition}')  # exit(1)
 
     def format(self, job_name: str, tmpfile: Path) -> List[str]:
         ''' Return string list of kwargs for `sbatch` '''
@@ -147,7 +139,7 @@ class Request:
             '--time', f'{self.time}:00:00',
             '--signal', 'B:SIGTERM@60',
             '--parsable'
-        ] + (['--exclude', f'{",".join(self.exclude)}'] if self.exclude else [])
+        ]
 
 
 class Job:
@@ -225,17 +217,6 @@ class Session(Job):
         self._url = url
 
     @property
-    def token(self) -> str:
-        try:
-            return self._token
-        except AttributeError:
-            return ''
-
-    @token.setter
-    def token(self, token: str) -> None:
-        self._token = token
-
-    @property
     def is_alive(self) -> bool:
         if self.is_running:
             try:
@@ -252,8 +233,7 @@ class Session(Job):
                 'job_name': self.job_name,
                 'partition': self.partition,
                 'node': self.node,
-                'url': self.url,
-                'token': self.token
+                'url': self.url
             }
         }
 
@@ -278,7 +258,6 @@ class Session(Job):
         with open(yml) as F:
             session_yaml = load_yaml(F)
         session.url = session_yaml[job_id]['url']
-        session.token = session_yaml[job_id]['token']
         return session
 
 

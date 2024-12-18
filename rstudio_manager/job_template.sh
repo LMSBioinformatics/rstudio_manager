@@ -5,7 +5,6 @@
 ################################################################################
 # Environmental variables available via SLURM:
 #     RSTUDIO_SIF: singularity .sif image location
-#     PASSWORD: password token for the RStudio server
 #     BIND_PATHS: (can be blank) additional bind paths for singularity
 ################################################################################
 
@@ -75,7 +74,7 @@ EOF
 # Write rserver.conf
 cat > ${SESSION_TMP}/etc/rstudio/rserver.conf <<EOF
 www-port=${PORT}
-auth-none=0
+auth-none=1
 auth-pam-helper-path=pam-helper
 auth-timeout-minutes=0
 server-data-dir=/tmp

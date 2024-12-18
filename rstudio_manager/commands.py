@@ -44,7 +44,6 @@ def rstudio_start(args: Namespace) -> None:
             # submit the job
             logger.info('Submitting the job')
             exports = {
-                'PASSWORD': args.token,
                 'RSTUDIO_SIF': SINGULARITY_IMAGE.substitute(vers=args.r_version),
                 'BIND_PATHS': f'"{args.bind}"'
             }
@@ -74,7 +73,6 @@ def rstudio_start(args: Namespace) -> None:
                 tmpfile.seek(0, 2)
             tmpfile.seek(0)
             session.url = f'http://{tmpfile.readline().strip()}'
-            session.token = args.token
             session.write()
             # wait until we can connect to the session
             while not session.is_alive:
@@ -82,7 +80,6 @@ def rstudio_start(args: Namespace) -> None:
         logger.info(f'\nRStudio is running on {session.node}')
         # print so that those using -q see the output
         print(f'URL:   {session.url}')
-        print(f'Token: {session.token}')
 
 
 def rstudio_stop(args: Namespace) -> None:
@@ -119,12 +116,10 @@ def rstudio_list(args: Namespace) -> None:
     table.add_column("Name", justify="left")
     table.add_column("Node", justify="left", no_wrap=True)
     table.add_column("URL", justify="left", no_wrap=True)
-    table.add_column("Token", justify="left", no_wrap=True)
 
     for session in get_rstudio_jobs():
         table.add_row(
-            session.job_id, session.job_name, session.node,
-            session.url, session.token
+            session.job_id, session.job_name, session.node, session.url
         )
 
     console = Console()

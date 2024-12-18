@@ -10,15 +10,15 @@ sessions for the user.
 based on the popular
 [rocker/rstudio](https://hub.docker.com/r/rocker/rstudio/)
 `docker` image. Various additional system, maths, and compression libraries are
-added for enhanced compatibility, as well as the `renv` and `rmarkdown` libraries
-for `R` to streamline immediate use.
+added for enhanced compatibility from the
+[bioconductor/bioconductor_docker](https://hub.docker.com/r/bioconductor/bioconductor_docker/)
+image, as well as a few extras. To provide some extra initial functionality, the
+`renv`, `devtools`, `rmarkdown`, and `tidyverse` `R` packages are pre-installed.
 
 Three subcommands are exposed to the user:
 
 - `rstudio start`
-  Launches an `RStudio` server session, returning the URL and password token
-  needed to connect. To prevent in-browser conflict between concurrent sessions,
-  jobs are spread across available nodes
+  Launches an `RStudio` server session, returning the URL needed to connect
 
 - `rstudio stop`
   Runs `scancel` for a running session or for all active sessions
