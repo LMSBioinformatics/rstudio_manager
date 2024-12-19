@@ -130,7 +130,7 @@ commands['list'] = subparsers.add_parser(
     description='list running RStudio servers',
     formatter_class=RawDescriptionRichHelpFormatter)
 # register the alias names as placeholders
-commands['ls'] = commands['list']
+commands['ls'] = commands['show'] = commands['list']
 
 
 # main ########################################################################
