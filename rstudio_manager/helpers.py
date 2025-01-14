@@ -35,9 +35,12 @@ partitions = {
         'gpu': 2,
         'time': 16,
         'qos': 'qos_int',
-        'nodes': ('compute001', 'compute002', 'compute003', 'compute004',
-            'compute005', 'compute006', 'hmem001', 'gpu001', 'gpu002',
-            'gpu003', 'gpu004')
+        'nodes': (
+            'compute001', 'compute002', 'compute003', 'compute004',
+            'compute005', 'compute006',
+            'hmem001',
+            'gpu001', 'gpu002', 'gpu003', 'gpu004'
+        )
     },
     'cpu': {
         'cpu': 16,
@@ -45,8 +48,11 @@ partitions = {
         'gpu': 0,
         'time': 72,
         'qos': 'qos_batch',
-        'nodes': ('compute001', 'compute002', 'compute003', 'compute004',
-            'compute005', 'compute006', 'hmem001')
+        'nodes': (
+            'compute001', 'compute002', 'compute003', 'compute004',
+            'compute005', 'compute006',
+            'hmem001'
+        )
     },
     'gpu': {
         'cpu': 56,
@@ -121,6 +127,11 @@ class Request:
             assert 0 <= self.gpu <= partitions[self.partition]['gpu']
             assert 1 <= self.time <= partitions[self.partition]['time']
             self.qos = partitions[self.partition]['qos']
+            self.exclude = tuple(s.node for s in get_rstudio_jobs())
+            assert len(tuple(
+                node for node in partitions[self.partition]['nodes']
+                if node not in self.exclude
+            )) > 0
         except AssertionError:
             logger.error(
                 f'Invalid request for SLURM partition: {self.partition}')  # exit(1)
@@ -139,7 +150,7 @@ class Request:
             '--time', f'{self.time}:00:00',
             '--signal', 'B:SIGTERM@60',
             '--parsable'
-        ]
+        ] + (['--exclude', f'{",".join(self.exclude)}'] if self.exclude else [])
 
 
 class Job:

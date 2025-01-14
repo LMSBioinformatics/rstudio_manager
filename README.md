@@ -18,7 +18,9 @@ image, as well as a few extras. To provide some extra initial functionality, the
 Three subcommands are exposed to the user:
 
 - `rstudio start`
-  Launches an `RStudio` server session, returning the URL needed to connect
+  Launches an `RStudio` server session, returning the URL needed to connect. To
+  prevent in-browser conflict between concurrent sessions, jobs are spread across
+  available nodes
 
 - `rstudio stop`
   Runs `scancel` for a running session or for all active sessions
