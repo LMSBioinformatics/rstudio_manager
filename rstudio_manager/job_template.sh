@@ -86,6 +86,7 @@ session-timeout-minutes=0
 session-quit-child-processes-on-exit=1
 session-default-working-dir=${SLURM_SUBMIT_DIR}
 session-default-new-project-dir=/home/${USER}
+copilot-enabled=1
 EOF
 
 # Prevent OpenMP over-allocation
