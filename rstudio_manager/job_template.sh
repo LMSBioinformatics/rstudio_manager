@@ -37,6 +37,12 @@ freeport() {
     | head -1
 }
 
+# Translate a dotted version number for compatibility with bash
+version() {
+    echo "$@" \
+    | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'
+}
+
 ################################################################################
 # Setup the execution environment
 ################################################################################
@@ -86,8 +92,10 @@ session-timeout-minutes=0
 session-quit-child-processes-on-exit=1
 session-default-working-dir=${SLURM_SUBMIT_DIR}
 session-default-new-project-dir=/home/${USER}
-copilot-enabled=1
 EOF
+if [ $(version "${RSTUDIO_R}") -ge $(version "4.3") ]; then
+    echo "copilot-enabled=1" >> ${SESSION_TMP}/etc/rstudio/rsession.conf
+fi
 
 # Prevent OpenMP over-allocation
 export OMP_NUM_THREADS=${SLURM_CPUS_ON_NODE}

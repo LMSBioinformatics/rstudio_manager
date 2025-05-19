@@ -45,6 +45,7 @@ def rstudio_start(args: Namespace) -> None:
             logger.info('Submitting the job')
             exports = {
                 'RSTUDIO_SIF': SINGULARITY_IMAGE.substitute(vers=args.r_version),
+                'RSTUDIO_R': f'{args.r_version}',
                 'BIND_PATHS': f'"{args.bind}"'
             }
             job_id = \
